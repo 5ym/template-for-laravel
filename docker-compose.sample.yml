@@ -1,0 +1,12 @@
+version: "3.8"
+
+services:
+  web:
+    build: .
+    user: root
+    volumes:
+      - "./html:/var/lib/nginx/html"
+    environment:
+      - APP_KEY=base64:snQ1sMKrJ5IJsA3ZYEXyHap3UBeogX528QqON2SGt80=
+    labels:
+      - "traefik.http.routers.web.rule=Host(`web.localhost`)"
