@@ -3,10 +3,28 @@ version: "3.8"
 services:
   web:
     build: .
-    user: root
     volumes:
       - "./html:/var/lib/nginx/html"
+    networks:
+      - docker_default
+      - default
     environment:
-      - APP_KEY=base64:snQ1sMKrJ5IJsA3ZYEXyHap3UBeogX528QqON2SGt80=
+      - DB_HOST=db
+      - DB_DATABASE=web
+      - DB_USERNAME=root
+      - DB_PASSWORD=web
+      - REDIS_HOST=redis
     labels:
       - "traefik.http.routers.web.rule=Host(`web.localhost`)"
+  db:
+    image: mariadb
+    environment:
+      - MARIADB_ROOT_PASSWORD=web
+      - MARIADB_DATABASE=web
+  redis:
+    image: redis
+  
+networks:
+  docker_default:
+    external: true
+    name: docker_default

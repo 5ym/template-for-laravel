@@ -14,3 +14,7 @@ curl -sf https://raw.githubusercontent.com/5ym/docker-laravel-jit/main/init.sh |
 ```
 
 gitのリモートなどはプロジェクト構築後適宜変更してください。
+
+```sh
+git remote set-url origin https://hogehoge
+```
