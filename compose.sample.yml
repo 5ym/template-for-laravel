@@ -1,0 +1,74 @@
+services:
+  template:
+    build:
+      dockerfile_inline: |
+        FROM php:8.2-bookworm as base
+        WORKDIR /app
+        RUN export MAKEFLAGS="-j $(nproc)" && pecl install swoole redis && \
+            docker-php-ext-enable swoole redis && docker-php-ext-install -j$(nproc) pcntl opcache && \
+            apt-get update && apt-get install gnupg -y && \
+            curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg && \
+            echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list && \
+            apt-get update && apt-get install nodejs -y && \
+            mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
+        COPY z_custom.ini /usr/local/etc/php/conf.d/
+        EXPOSE 8000
+        CMD [ "php", "artisan", "octane:start", "--host=0.0.0.0", "--watch" ]
+    volumes:
+      - .:/app
+    networks:
+      - default
+      - docker_default
+    environment:
+      - APP_DEBUG=true
+      - APP_KEY=base64:ByG8EB766NemxtBWoggBqRcKtYGvq0aJzHc9cXg/1Vg=
+      - DB_CONNECTION=postgres
+      - DB_HOST=db
+      - DB_DATABASE=template
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=sergtsop
+      - SESSION_DRIVER=redis
+      - CACHE_DRIVER=redis
+      - REDIS_HOST=redis
+      - OCTANE_SERVER=swoole
+      - FILESYSTEM_DISK=s3
+      - AWS_ENDPOINT=http://template-minio:9001
+      - AWS_ACCESS_KEY_ID=minioadmin
+      - AWS_SECRET_ACCESS_KEY=minioadmin
+      - AWS_BUCKET=template
+    labels:
+      - "traefik.http.routers.template.rule=Host(`template.localhost`)"
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_PASSWORD=sergtsop
+      - POSTGRES_DB=template
+    volumes:
+      - db:/var/lib/mysql
+  redis:
+    image: redis
+    volumes:
+      - redis:/data
+  template-minio:
+    build:
+      dockerfile_inline: |
+        FROM minio/minio
+        RUN mkdir -p /data/template
+    command: server /data --console-address :9001
+    networks:
+      - default
+      - docker_default
+    volumes:
+      - minio:/data
+    labels:
+      - "traefik.http.services.template-minio.loadbalancer.server.port=9001"
+      - "traefik.http.routers.template-minio.rule=Host(`minio.template.localhost`)"
+
+volumes:
+  db:
+  redis:
+  minio:
+networks:
+  docker_default:
+    external: true
+    name: docker_default

@@ -1,8 +1,17 @@
-FROM php:fpm-alpine
+FROM php:8.2-bookworm as base
+WORKDIR /app
+RUN export MAKEFLAGS="-j $(nproc)" && pecl install swoole redis && \
+    docker-php-ext-enable swoole redis && docker-php-ext-install -j$(nproc) pcntl opcache
+COPY z_custom.ini /usr/local/etc/php/conf.d/
+EXPOSE 8000
+ENTRYPOINT [ "php", "artisan", "octane:start", "--host=0.0.0.0" ]
 
-COPY 99_custom.ini /usr/local/etc/php/conf.d/
-RUN cp /usr/local/etc/php/php.ini-production /usr/local/etc/php/php.ini && docker-php-ext-enable opcache && \
-    wget https://raw.githubusercontent.com/composer/getcomposer.org/main/web/installer -O - -q | php -- --install-dir="/usr/local/bin/" --filename="composer"
-COPY --chown=www-data:www-data html .
-USER www-data
+FROM composer as builder
+COPY composer.json composer.lock ./
+RUN composer install --no-autoloader
+COPY . .
 RUN composer install
+
+FROM base
+RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
+COPY --from=builder /app .

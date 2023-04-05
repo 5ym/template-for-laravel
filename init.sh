@@ -1,9 +1,13 @@
 #!/bin/sh
 
-git clone https://github.com/5ym/docker-laravel-jit.git
-cd docker-laravel-jit
-cp docker-compose.sample.yml docker-compose.yml
-docker run --rm --network host -v $(pwd)/html:/app composer create-project laravel/laravel .
-docker compose run --rm -u root app sh -c "chown -R www-data:www-data . && chmod -R 777 . && sed -i -e 's/.env$//g' .gitignore"
-sed -i -e 's/\/html//g' .gitignore
+docker run -it -v $(pwd):/app --rm --entrypoint bash composer:2.6 -c 'composer global require laravel/installer && /tmp/vendor/bin/laravel new -q app'
+cd app
+wget https://raw.githubusercontent.com/5ym/template-for-laravel/main/compose.sample.yml
+wget https://raw.githubusercontent.com/5ym/template-for-laravel/main/Dockerfile
+wget https://raw.githubusercontent.com/5ym/template-for-laravel/main/z_custom.ini
+cp compose.sample.yml compose.yml
+rm -f .env
+docker compose run --rm --entrypoint bash template -c 'composer require laravel/octane && php artisan octane:install --server=swoole && npm install --save-dev chokidar'
+echo compose.yml >> .gitignore
+cp .gitignore .dockerignore
 docker compose up

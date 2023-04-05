@@ -1,7 +1,8 @@
-# docker-laravel-jit
+# template-for-laravel
 
 jitを有効化したdockerによるlaravelの開発環境を即座に構築できます。  
-dockerfileでビルドしたイメージはそのまま本番環境にデプロイできます。
+dockerfileでビルドしたイメージはそのまま本番環境にデプロイできます。  
+Laravel Octaneを使用しphp-fpmやnginxの煩雑な管理を不要にしています
 
 ## how to
 
@@ -11,10 +12,4 @@ dockerfileでビルドしたイメージはそのまま本番環境にデプロ�
 
 ```sh
 curl -sf https://raw.githubusercontent.com/5ym/docker-laravel-jit/main/init.sh | sh -s
-```
-
-gitのリモートなどはプロジェクト構築後適宜変更してください。
-
-```sh
-git remote set-url origin https://hogehoge
 ```
