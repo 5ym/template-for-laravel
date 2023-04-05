@@ -3,21 +3,25 @@ version: "3.8"
 services:
   web:
     build:
-      context: .
+      context: web
       network: host
-    volumes:
-      - "./html:/var/lib/nginx/html"
     networks:
       - docker_default
       - default
+    labels:
+      - "traefik.http.routers.web.rule=Host(`web.localhost`)"
+  app:
+    build:
+      context: app
+      network: host
+    volumes:
+      - ./html:/var/www/html
     environment:
       - DB_HOST=db
       - DB_DATABASE=web
       - DB_USERNAME=root
       - DB_PASSWORD=web
       - REDIS_HOST=redis
-    labels:
-      - "traefik.http.routers.web.rule=Host(`web.localhost`)"
   db:
     image: mariadb
     environment:
