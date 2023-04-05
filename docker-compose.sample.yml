@@ -5,8 +5,6 @@ services:
     build:
       context: web
       network: host
-    volumes:
-      - ./html:/usr/share/nginx/html
     networks:
       - docker_default
       - default
@@ -14,8 +12,10 @@ services:
       - "traefik.http.routers.web.rule=Host(`web.localhost`)"
   app:
     build:
-      context: app
+      context: .
       network: host
+    volumes:
+      - ./html:/var/www/html
     environment:
       - DB_HOST=db
       - DB_DATABASE=web
